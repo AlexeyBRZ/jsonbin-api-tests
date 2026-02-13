@@ -1,13 +1,19 @@
 import { collectionId, hugeObjectId, jsonbinUrl } from "../config/constants";
 import { JsonbinController } from "../controllers/jsonbin.controller";
 import { JsonbinApiKey } from "../config/constants";
-import { baseObject, containsArrayObject, difDataTypesObject, hugeObject } from "../config/testData";
+import {
+  baseObject,
+  complObject,
+  containsArrayObject,
+  difDataTypesObject,
+  hugeObject,
+} from "../config/testData";
 
 describe("Test jsonbin", () => {
   describe("tests of POST methods", () => {
     const jsonbin = new JsonbinController(jsonbinUrl, JsonbinApiKey);
 
-    it.skip("set a simple object", async () => {
+    it("set a simple object", async () => {
       const response = await jsonbin.createBin(baseObject);
       expect(response.body.metadata.id).toBeDefined();
       expect(response.status).toBe(200);
@@ -35,6 +41,15 @@ describe("Test jsonbin", () => {
         throw new Error("Custom Error");
       } catch (err: any) {
         expect(err.status).toBe(401);
+      }
+    });
+
+    it("check 400 code if set a wrong collection", async () => {
+      try {
+        await jsonbin.createBinWithWrongCollection(complObject);
+        throw new Error("Custom Error");
+      } catch (err: any) {
+        expect(err.status).toBe(400);
       }
     });
   });
@@ -79,7 +94,7 @@ describe("Test jsonbin", () => {
     });
   });
 
-  describe("tests of PUT & DELETE methods", () => {
+  describe("tests of PUT methods", () => {
     const jsonbin = new JsonbinController(jsonbinUrl, JsonbinApiKey);
 
     it("set object with different data", async () => {
@@ -97,10 +112,75 @@ describe("Test jsonbin", () => {
       expect(response.body.record.stringValue).toBe("text");
     });
 
+    it("receive Bad request with put", async () => {
+      try {
+        await jsonbin.putDataToWrongObject(baseObject, containsArrayObject);
+        throw new Error("Custom Error");
+      } catch (err: any) {
+        expect(err.status).toBe(400);
+      }
+    });
+
+    it("receive unauthorized with put", async () => {
+      try {
+        await jsonbin.putWithInvalidApiKey(baseObject, containsArrayObject);
+        throw new Error("Custom Error");
+      } catch (err: any) {
+        expect(err.status).toBe(401);
+      }
+    });
+
+    it("receive bad request with Put if content-type not set", async () => {
+      try {
+        await jsonbin.putWithoutContentType(baseObject, containsArrayObject);
+        throw new Error("Custom Error");
+      } catch (err: any) {
+        expect(err.status).toBe(400);
+      }
+    });
+  });
+
+  describe("tests of Del methods", () => {
+    const jsonbin = new JsonbinController(jsonbinUrl, JsonbinApiKey);
+
     it("delete created Object", async () => {
-        const response = await jsonbin.deleteObject(containsArrayObject)
-        expect(response.status).toBe(200)
-        expect(response.body.message).toBe("Bin deleted successfully")
-    })
+      const response = await jsonbin.deleteObject(containsArrayObject);
+      expect(response.status).toBe(200);
+      expect(response.body.message).toBe("Bin deleted successfully");
+    });
+
+    it("receive bad request with del due to wron bin", async () => {
+      try {
+        await jsonbin.deleteObjectThatNotExists(baseObject);
+        throw new Error("Custom Error");
+      } catch (err: any) {
+        expect(err.status).toBe(400);
+      }
+    });
+
+    it("receive unathorized with del", async () => {
+      try {
+        await jsonbin.deleteWithWrongApiKey(baseObject);
+        throw new Error("Custom Error");
+      } catch (err: any) {
+        expect(err.response?.status).toBe(401);
+      }
+    });
+
+    it("receive unathorized with del if contentType not set", async () => {
+      try {
+        await jsonbin.deleteObjectWithWrongContentType(baseObject);
+        throw new Error("Custom Error");
+      } catch (err: any) {
+        expect(err.response?.status).toBe(401);
+      }
+    });
+
+    it("delete bin from collection", async () => {
+      const response =
+        await jsonbin.deleteObjectFromCollection(containsArrayObject);
+      expect(response.status).toBe(200);
+      expect(response.body.message).toBe("Bin deleted successfully");
+    });
   });
 });

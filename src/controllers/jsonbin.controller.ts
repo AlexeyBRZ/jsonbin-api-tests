@@ -1,4 +1,5 @@
 import superagent from "superagent";
+import { collectionId } from "../config/constants";
 
 export class JsonbinController {
   private baseUrl: string;
@@ -27,21 +28,7 @@ export class JsonbinController {
       .set("Content-Type", "application/json")
       .set("X-Master-Key", this.apiKey)
       .set("X-Bin-Name", "Huge Object")
-      // .set("X-Collection-Id", "69876c87d0ea881f40a847b7")
-      .send(data);
-    return {
-      body: res.body,
-      status: res.status,
-    };
-  }
-
-  async createEmptyBin(data: object) {
-    const res = await superagent
-      .post(`${this.baseUrl}/b`)
-      .set("Content-Type", "application/json")
-      .set("X-Master-Key", this.apiKey)
-      .set("X-Bin-Name", "Empty Object")
-      // .set("X-Collection-Id", "69876c87d0ea881f40a847b7")
+      //   .set("X-Collection-Id", collectionId)
       .send(data);
     return {
       body: res.body,
@@ -55,7 +42,7 @@ export class JsonbinController {
       .set("Content-Type", "application/json")
       .set("X-Master-Key", this.apiKey)
       .set("X-Bin-Name", "Special Bin")
-      // .set("X-Collection-Id", "69876c87d0ea881f40a847b7")
+      .set("X-Collection-Id", "69876c87d0ea881f40a847b7")
       .send(data);
     return {
       body: res.body,
@@ -81,6 +68,20 @@ export class JsonbinController {
       .set("X-Collaction-Id", "test")
       .send(data);
     return {
+      status: res.status,
+    };
+  }
+
+  async createBinWithWrongCollection(data: object) {
+    const res = await superagent
+      .post(`${this.baseUrl}/b`)
+      .set("Content-Type", "application/json")
+      .set("X-Master-Key", this.apiKey)
+      .set("X-Bin-Name", "Huge Object")
+      .set("X-Collection-Id", "11116c87d0ea881f40a847b7")
+      .send(data);
+    return {
+      body: res.body,
       status: res.status,
     };
   }
@@ -147,6 +148,69 @@ export class JsonbinController {
     };
   }
 
+  async putDataToWrongObject(
+    binThatShouldBeUpdatedId: object,
+    newBinObject: object,
+  ) {
+    const res1 = await superagent
+      .post(`${this.baseUrl}/b`)
+      .set("Content-Type", "application/json")
+      .set("X-Master-Key", this.apiKey)
+      .set("X-Bin-Name", "Special Object")
+      .send(binThatShouldBeUpdatedId);
+    const res = await superagent
+      .put(`${this.baseUrl}/b/876ba643b1c97be96cded4`)
+      .set("Content-Type", "application/json")
+      .set("X-Master-Key", this.apiKey)
+      .send(newBinObject);
+    return {
+      body: res.body,
+      status: res.status,
+    };
+  }
+
+  async putWithInvalidApiKey(
+    binThatShouldBeUpdatedId: object,
+    newBinObject: object,
+  ) {
+    const res1 = await superagent
+      .post(`${this.baseUrl}/b`)
+      .set("Content-Type", "application/json")
+      .set("X-Master-Key", this.apiKey)
+      .set("X-Bin-Name", "Special Object")
+      .send(binThatShouldBeUpdatedId);
+    const id = res1.body.metadata.id;
+    const res = await superagent
+      .put(`${this.baseUrl}/b/${id}`)
+      .set("Content-Type", "application/json")
+      .set("X-Master-Key", "this.apiKey")
+      .send(newBinObject);
+    return {
+      body: res.body,
+      status: res.status,
+    };
+  }
+
+  async putWithoutContentType(
+    binThatShouldBeUpdatedId: object,
+    newBinObject: object,
+  ) {
+    const res1 = await superagent
+      .post(`${this.baseUrl}/b`)
+      .set("Content-Type", "application/json")
+      .set("X-Master-Key", this.apiKey)
+      .set("X-Bin-Name", "Special Object")
+      .send(binThatShouldBeUpdatedId);
+    const res = await superagent
+      .put(`${this.baseUrl}/b/876ba643b1c97be96cded4`)
+      .set("X-Master-Key", this.apiKey)
+      .send(newBinObject);
+    return {
+      body: res.body,
+      status: res.status,
+    };
+  }
+
   async deleteObject(data: object) {
     const res1 = await superagent
       .post(`${this.baseUrl}/b`)
@@ -158,7 +222,79 @@ export class JsonbinController {
     const res = await superagent
       .delete(`${this.baseUrl}/b/${id}`)
       .set("Content-Type", "application/json")
+      .set("X-Master-Key", this.apiKey);
+    return {
+      body: res.body,
+      status: res.status,
+    };
+  }
+
+  async deleteWithWrongApiKey(data: object) {
+    const res1 = await superagent
+      .post(`${this.baseUrl}/b`)
+      .set("Content-Type", "application/json")
       .set("X-Master-Key", this.apiKey)
+      .set("X-Bin-Name", "Object to delete")
+      .send(data);
+    const id = res1.body.metadata.id;
+    const res = await superagent
+      .delete(`${this.baseUrl}/b/${id}`)
+      .set("Content-Type", "application/json")
+      .set("X-Master-Key", "ApiKey");
+    return {
+      body: res.body,
+      status: res.status,
+    };
+  }
+
+  async deleteObjectWithWrongContentType(data: object) {
+    const res1 = await superagent
+      .post(`${this.baseUrl}/b`)
+      .set("Content-Type", "application/json")
+      .set("X-Master-Key", this.apiKey)
+      .set("X-Bin-Name", "Object to delete")
+      .send(data);
+    const id = res1.body.metadata.id;
+    const res = await superagent
+      .delete(`${this.baseUrl}/b/${id}`)
+      .set("Content-Type", "test")
+      .set("X-Master-Key", "ApiKey");
+    return {
+      body: res.body,
+      status: res.status,
+    };
+  }
+
+  async deleteObjectThatNotExists(data: object) {
+    const res1 = await superagent
+      .post(`${this.baseUrl}/b`)
+      .set("Content-Type", "application/json")
+      .set("X-Master-Key", this.apiKey)
+      .set("X-Bin-Name", "Object to delete")
+      .send(data);
+    const res = await superagent
+      .delete(`${this.baseUrl}/b/876ba643b1c97be96cded4`)
+      .set("Content-Type", "application/json")
+      .set("X-Master-Key", this.apiKey);
+    return {
+      body: res.body,
+      status: res.status,
+    };
+  }
+
+  async deleteObjectFromCollection(data: object) {
+    const res1 = await superagent
+      .post(`${this.baseUrl}/b`)
+      .set("Content-Type", "application/json")
+      .set("X-Master-Key", this.apiKey)
+      .set("X-Bin-Name", "Empty Object")
+      .set("X-Collection-Id", collectionId)
+      .send(data);
+    const id = res1.body.metadata.id;
+    const res = await superagent
+      .delete(`${this.baseUrl}/b/${id}`)
+      .set("Content-Type", "application/json")
+      .set("X-Master-Key", this.apiKey);
     return {
       body: res.body,
       status: res.status,
