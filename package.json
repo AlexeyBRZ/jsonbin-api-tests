@@ -16,7 +16,6 @@
   "main": "index.js",
   "scripts": {
     "test": "npx jest src/tests/jsonbin.spec.ts",
-    "jest": "jest",
     "pret": "npx prettier --write ."
   },
   "devDependencies": {

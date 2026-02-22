@@ -66,22 +66,4 @@ export const difDataTypesObject = {
   },
 };
 
-// export const forPatchObject = {
-//   user: {
-//     contacts: {
-//       phone: "+34600999999",
-//     },
-//   },
-//   subscription: {
-//     plan: "basic",
-//   },
-// };
-
-// export const forPutObject = {
-//   name: "Peter",
-//   status: "archived",
-//   reason: "No longer needed",
-//   updatedBy: "automation-test",
-// };
-
 export const emptyObject = {};
